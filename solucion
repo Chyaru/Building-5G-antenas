@@ -1,0 +1,78 @@
+#include<bits/stdc++.h>
+#define forn(i, n) for(int i = 0; i < n; i++)
+#define pb push_back
+#define F first
+#define S second
+#define vpai vector<pair<int, int>>
+#define pai pair<int, int>
+using namespace std;
+const int lmt = 1e5 + 5;
+
+vpai nxt_vis[lmt];
+priority_queue<int> mejores;
+bool vis[lmt];
+
+int ko;
+// apuntaras a los siguientes libres
+vpai apunta(int ind, int k){
+
+    // sera el siguiente libre
+    if(k==0) return {{0,ind}};
+
+    if(!vis[ind]){ mejores.push(ind*-1); vis[ind] = true; } 
+
+    // visitara a los siguientes libres
+    vpai copia = nxt_vis[ind];
+    nxt_vis[ind].clear();
+    for(pair<int, int> x: copia){
+        if(x.F>k){ nxt_vis[ind].pb(x); continue; } 
+        vpai a = apunta(x.S, k-x.F);
+        for(pai b: a) if(x.F + b.F <= ko) nxt_vis[ind].pb({b.F + x.F, b.S});
+    }
+    return nxt_vis[ind];
+}
+
+vector<int> ed[lmt];
+int padre[lmt];
+void f(int ind, int fada){
+    padre[ind] = fada;
+    for(int to: ed[ind]) if(to!=fada){
+        nxt_vis[ind].pb({1,to});
+        f(to, ind);
+    }
+    return;
+}
+
+int main(){
+    ios_base::sync_with_stdio(false);
+    cin.tie(0); cout.tie(0);
+    int n, k; cin>>n>>k; k++;
+    ko = k;
+    forn(i,n-1){
+        int x, y; cin>>x>>y;
+        ed[x].pb(y);
+        ed[y].pb(x);
+    }
+    
+    // inicializar para padres y siguientes libres
+    f(1,-1);
+
+
+    mejores.push(-1); vis[1] = true;
+    // de los que ya has visitado, el menor
+    while(mejores.size()){
+        int x = mejores.top()*-1; mejores.pop();
+        cout<<x<<" ";
+        int to = x;
+        int K = k;
+        // recorres a los padres para ver si te puedes extender O(k)
+        while(x!=-1 && K>0){
+            apunta(x,K);
+            x = padre[x];
+            K--;
+        }
+    }
+
+    // O(NK + N + NlogN)
+    return 0;
+}
